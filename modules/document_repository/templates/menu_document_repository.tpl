@@ -1,3 +1,61 @@
+{literal}
+<script type="text/javascript" src="js/modules/mustache.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    var fileDir = {/literal}{$File_categories|json_encode}{literal}
+    for(var i in fileDir){
+        if(fileDir[i]){
+            var dir = fileDir[i];
+            var path = dir.CategoryName.split(">");
+            var depth = path.length;
+            var elm = document.createElement("li");
+            elm.innerHTML = "<span class='glyphicon glyphicon-folder-close'> " + path[depth - 1] + "</span>";
+            elm.setAttribute("id", path[depth - 1]);
+            if(depth == 1) {
+                $("#home-dir").append(elm);
+            } else {
+                elm.setAttribute("style", "display: none;");
+                $("#" + path[depth - 2] + "First").before(elm);
+            }
+            var children = document.createElement("ul");
+            children.setAttribute("id", path[depth - 1] + "Children");
+            elm.appendChild(children);
+            var files = fileDir[i].Files;
+            for(var ii in files) {
+                var child = document.createElement("li");
+                child.innerHTML = files[ii].File_name;
+                child.setAttribute("style", "display: none;");
+                $("#" + path[depth - 1] + "Children").append(child);
+                if(ii == 0) {
+                    child.setAttribute("id", path[depth - 1] + "First");
+                }
+            }
+            var template = $('#template').html();
+              Mustache.parse(template);   // optional, speeds up future uses
+              var rendered = Mustache.render(template, {name: "Luke"});
+              $('#target').html(rendered);
+        }
+    }
+});
+$(function () {
+    $('.tree li:has(ul)').addClass('parent_li').find(' > span').attr('title', 'Collapse this branch');
+    $('.tree li.parent_li > span').on('click', function (e) {
+        var children = $(this).parent('li.parent_li').find(' > ul > li');
+        if (children.is(":visible")) {
+            children.hide('fast');
+            $(this).addClass('glyphicon-folder-close').removeClass('glyphicon-folder-open');
+        } else {
+            children.show('fast');
+            $(this).addClass('glyphicon-folder-open').removeClass('glyphicon-folder-close');
+        }
+        e.stopPropagation();
+    });
+});
+</script>
+{/literal}
+
+<div id="target">Loading...</div>
+
 <form method="post" action="main.php?filtered=true&test_name=document_repository" id = "filterForm">
 <table border="0" class="std" id = "filterTable" data-filter = "{$filtered}">
     <tr>
@@ -26,6 +84,11 @@
 </table>
 </form>
 
+{literal}
+<script id="template" type="x-tmpl-mustache">
+Hello {{ name }}!
+</script>
+{/literal}
                 
 <div class = "ui-accordion ui-widget ui-helper-reset">
 <table border="0" width="80%" id = "accordionTable" class="docRepository" data-open = "{$openAccordion}">
@@ -42,6 +105,14 @@
         </th>
     {/section}
 </tr>
+
+
+<div class="tree well">
+    <ul id="home-dir">
+
+    </ul>
+</div>
+
 
 
 <div id="accordion" class="ui-accordion ui-widget ui-helper-reset ui-accordion-icons" role="tablist">
