@@ -219,11 +219,25 @@ Once in the text editor, ensure that the file looks similar to the following:
     Allow from all
 </Directory>
 ```
+If you are using apache version 2.4 or later add the add the following line between the ```<Directory>``` tags
+```
+Require all granted
+```
 
 Restart your apache server:
 ```
 sudo apachectl restart
 ```
+Open the ```/etc/apache2/httpd.conf``` in a text editor and locate the lines containing 
+```Include /private/etc/apache2/extra/httpd-userdir.conf```
+```LoadModule userdir_module libexec/apache2/mod_userdir.so```
+
+Ensure that the line is uncommented (remove the ```#``` at the beginning of the line)
+
+Open the ```/etc/apache2/extra/httpd-userdir.conf``` in a text editor and locate the line containing 
+```Include /private/etc/apache2/users/*.conf```
+
+Ensure that the line is uncommented (remove the ```#``` at the beginning of the line)
 
 You can now access you LORIS sandbox using the url <a>http://localhost/~$username/loris/htdocs</a>
 
@@ -234,7 +248,9 @@ To access your sandbox on another device, replace ```localhost``` with your IP a
 The following section is a more advanced setting for you local apache server. This section is not necessary, but enables ```http://localhost.loris``` as an url shortcut, and creates LORIS-specific apache logs for easy troubleshooting (similar to ```/var/log/apache2/loris-err.log```).
 
 ### 3.4.1 Including vhosts
-Open the ```/etc/apache2/httpd.conf``` in a text editor and locate the line containing ```Include /private/etc/apache2/extra/httpd-vhosts.conf```
+Open the ```/etc/apache2/httpd.conf``` in a text editor and locate the lines containing 
+```Include /private/etc/apache2/extra/httpd-vhosts.conf```
+```LoadModule vhost_alias_module libexec/apache2/mod_vhost_alias.so```
 
 Ensure that the line is uncommented (remove the ```#``` at the beginning of the line)
 
