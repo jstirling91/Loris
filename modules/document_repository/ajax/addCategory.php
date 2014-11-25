@@ -48,26 +48,39 @@ if (Utility::isErrorX($user)) {
 
 //if user has document repository permission
 if ($user->hasPermission('file_upload')) {
-    $DB->insert(
-        "document_repository_categories",
-        array("category_name" => $category_name,
-              "parent_id"     => $parent_id,
-              "comments"      => $comments)
+    $exists = $DB->pselectOne(
+        "SELECT count(*) as count 
+            FROM document_repository_categories 
+            WHERE category_name=:category_name 
+                AND parent_id=:parent_id",
+        array('category_name' => $category_name, 
+                  'parent_id' => $parent_id)
     );
+    error_log(gettype($exists));
+    if($exists == 0){
+        $DB->insert(
+            "document_repository_categories",
+            array("category_name" => $category_name,
+                  "parent_id"     => $parent_id,
+                  "comments"      => $comments)
+        );
 
-    $www = $config->getSetting('www');
+        $www = $config->getSetting('www');
 
-    $msg_data['newCategory'] = $www['url'] . 
-                               "/main.php?test_name=document_repository";
-    $msg_data['category']    = $category_name;
+        $msg_data['newCategory'] = $www['url'] . 
+                                   "/main.php?test_name=document_repository";
+        $msg_data['category']    = $category_name;
 
-    $Doc_Repo_Notification_Emails = $DB->pselect(
-        "SELECT Email from users where Active='Y' and Doc_Repo_Notifications='Y' and UserID<>:uid",
-        array("uid"=>$user->getUsername())
-    );
-    foreach ($Doc_Repo_Notification_Emails as $email) {
-        Email::send($email['Email'], 'document_repository.tpl', $msg_data);
-    }
+        $Doc_Repo_Notification_Emails = $DB->pselect(
+            "SELECT Email from users where Active='Y' and Doc_Repo_Notifications='Y' and UserID<>:uid",
+            array("uid"=>$user->getUsername())
+        );
+        foreach ($Doc_Repo_Notification_Emails as $email) {
+            Email::send($email['Email'], 'document_repository.tpl', $msg_data);
+        }
+        print_r("success");
+    } else
+        print_r("error");
 }
 
 ?>

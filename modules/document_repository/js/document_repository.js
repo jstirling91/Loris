@@ -69,6 +69,7 @@ $(document).ready(function() {
     $('.upload-success').hide();
     $('.delete-success').hide();
     $('.add-success').hide();
+    $('.add-error').hide();
     $('.edit-success').hide();
     $('.upload-error').hide();
     $('.file-error').hide();
@@ -132,10 +133,15 @@ $(document).ready(function() {
                     url: "AjaxHelper.php?Module=document_repository&script=addCategory.php",
                     type: "POST",
                     data: $("#addCategoryForm").serialize(),
-                    success: function(){
-                                 $('.add-success').show();
-                                 setTimeout("$('.add-success').hide();", 3000);
-                                 setTimeout("location.reload();",3000);
+                    success: function(data){
+                        if(data == "success"){
+                            $('.add-error').hide();
+                            $('.add-success').show();
+                            // setTimeout("$('.add-success').hide();", 3000);
+                            setTimeout("location.reload();",3000);
+                        } else {
+                            $('.add-error').show();
+                        }
                     },
                     error:function(jqXHR, textStatus, errorThrown){
                         console.log("Error: " + textStatus + " " +errorThrown);

@@ -296,6 +296,13 @@
             New category successfully added! Loading changes in 3 seconds...
     </p>
 </div>
+<div class = "add-error">
+    <p>
+            <span class="ui-icon ui-icon-circle-check" style = "float:left;"></span>
+            Category already exists in parent category
+    </p>
+</div>
+
 
 <div class = "no-files">
     <p>
