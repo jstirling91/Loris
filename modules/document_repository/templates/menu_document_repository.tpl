@@ -289,34 +289,6 @@ $(function () {
 </script>
 {/literal}
 
-<form method="post" action="main.php?filtered=true&test_name=document_repository" id = "filterForm">
-<table border="0" class="std" id = "filterTable" data-filter = "{$filtered}">
-    <tr>
-        <th nowrap="nowrap" colspan="8">Selection Filter</th>
-    </tr>
-    <tr>
-        <td>{$form.File_name.label}</td>
-        <td>{$form.File_name.html}</td>
-        <td>{$form.version.label}</td>
-        <td>{$form.version.html}</td>
-        <td>{$form.uploaded_by.label}</td>
-        <td>{$form.uploaded_by.html}</td>
-    </tr>
-    <tr>
-        <td>{$form.File_type.label}</td>
-        <td>{$form.File_type.html}</td>
-        <td>{$form.For_site.label}</td>
-        <td>{$form.For_site.html}</td>
-    </tr>
-    <tr>
-
-        <td colspan="6" align="right"><input type="submit" name="filter" value="Show Data" class="button" />&nbsp;<input type="button" name="reset" value="Clear Form" class="button" onclick="location.href='main.php?test_name=document_repository&reset=true'" /></td>
-        <td align="right"><button id = "upload" name = "upload" class = "button">Upload File</button></td>
-        <td align="right"><button id = "addCategory" name = "addCategory" class = "button" onclick="return false;">Add Category</button></td>
-    </tr>
-</table>
-</form>
-
 <div class="tree">
     <ul id="home-dir">
 
