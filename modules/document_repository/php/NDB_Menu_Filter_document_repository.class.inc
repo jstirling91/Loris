@@ -307,7 +307,8 @@ class NDB_Menu_Filter_Document_Repository extends NDB_Menu_Filter
         // get the template data for the table rows
 
         $this->_setDataTableRows(-1);
-    }
+	$this->tpl_data['File_categories_json'] = print_r(json_encode($this->tpl_data['File_categories']), true);
+}
 
 
 

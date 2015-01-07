@@ -122,15 +122,15 @@
 <script type="text/javascript" src="js/modules/mustache.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
-    var fileDir = {/literal}{$File_categories|json_encode}{literal}
+    var fileDir = $.parseJSON($("#json_data").html());
     for(var i in fileDir){
         if(fileDir[i]){
             var dir = fileDir[i];
-            var path = dir.CategoryName.split(">");
+            var path = dir.CategoryName.split("&gt;");
             var depth = path.length;
             var elm = document.createElement("li");
             elm.innerHTML = "<span class='glyphicon glyphicon-folder-close'> " + path[depth - 1] + "</span>";
-            elm.setAttribute("id", path[depth - 1]);
+            elm.setAttribute("id", path[depth - 1].replace(/[ >()]/g,"_"));
 
             //new table layout
             var directory = $('#dir').html();
@@ -149,12 +149,12 @@ $(document).ready(function() {
                 $("#dir-tree").append(renderDir);
             } else {
                 elm.setAttribute("style", "display: none;");
-                $("#" + path[depth - 2] + "First").before(elm);
+                $("#" + path[depth - 2].replace(/[ >()]/g,"_") + "First").before(elm);
                 //new table layout
-                $("#" + path[depth - 2] + "a").after(renderDir);
+                $("#" + path[depth - 2].replace(/[ >()]/g,"_") + "a").after(renderDir);
             }
             var children = document.createElement("ul");
-            children.setAttribute("id", path[depth - 1] + "Children");
+            children.setAttribute("id", path[depth - 1].replace(/[ >()]/g,"_") + "Children");
             elm.appendChild(children);
             var files = fileDir[i].Files;
             for(var ii in files) {
@@ -162,17 +162,17 @@ $(document).ready(function() {
                 Mustache.parse(template);   // optional, speeds up future uses
                 files[ii].fileNameWidth = 500 - (depth - 1) * 70;
                 var rendered = Mustache.render(template, files[ii]);
-                $("#" + path[depth - 1] + "Children").append(rendered);
+                $("#" + path[depth - 1].replace(/[ >()]/g,"_") + "Children").append(rendered);
 
                 //new table layout
                 var file = $('#file').html();
                 Mustache.parse(file);   // optional, speeds up future uses
                 files[ii].indent = (depth)*30;
                 var renderedFile = Mustache.render(file, files[ii]);
-                $("#" + path[depth - 1] + "a").after(renderedFile);
+                $("#" + path[depth - 1].replace(/[ >()]/g,"_") + "a").after(renderedFile);
             }
-            if($("#" + path[depth - 1] + "Children").children().first().html()) {
-                $("#" + path[depth - 1] + "Children").children().first().attr("id", path[depth - 1] + "First")
+            if($("#" + path[depth - 1].replace(/[ >()]/g,"_") + "Children").children().first().html()) {
+                $("#" + path[depth - 1].replace(/[ >()]/g,"_") + "Children").children().first().attr("id", path[depth - 1].replace(/[ >()]/g,"_") + "First")
             }
         }
     }
@@ -288,7 +288,9 @@ $(function () {
     </li>
 </script>
 {/literal}
-
+{assign "find" array(' ','>','(',')')}
+{assign "replaceFind" array('_','_','_','_')}
+<div id="json_data" style="display:none;">{$File_categories_json}</div>
 <div class="tree">
     <ul id="home-dir">
 
