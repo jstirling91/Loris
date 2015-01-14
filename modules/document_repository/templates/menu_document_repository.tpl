@@ -63,6 +63,21 @@
 </div>
 {literal}
 <style type="text/css">
+.glyphicon-refresh-animate {
+    -animation: spin .7s infinite linear;
+    -webkit-animation: spin2 .7s infinite linear;
+}
+
+@-webkit-keyframes spin2 {
+    from { -webkit-transform: rotate(0deg);}
+    to { -webkit-transform: rotate(360deg);}
+}
+
+@keyframes spin {
+    from { transform: scale(1) rotate(0deg);}
+    to { transform: scale(1) rotate(360deg);}
+}
+
     .tree{
         overflow-x: auto
     }
@@ -176,6 +191,7 @@ $(document).ready(function() {
             }
         }
     }
+    $(".loading").hide();
 });
 $(function () {
     $('.tree li:has(ul)').addClass('parent_li').find(' > span').attr('title', 'Collapse this branch');
@@ -238,7 +254,7 @@ $(function () {
 </script>
 
 <script id="template" type="x-tmpl-mustache">
-    <li class="fileLI" style="display: none;">
+    <li class="fileLI" style="display: {/literal}{if $filtered}block{else}none{/if}{literal}">
         <div style="display: table; width: 1430px">
             <div class="file_name" style="width: {{ fileNameWidth }}px;">
                 {{ File_name }} ({{ File_size }})
@@ -292,6 +308,9 @@ $(function () {
 {assign "replaceFind" array('_','_','_','_')}
 <div id="json_data" style="display:none;">{$File_categories_json}</div>
 <div class="tree">
+    <center>
+    	<button class="btn btn-lg btn-primary loading"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Loading...</button>
+    </center>
     <ul id="home-dir">
 
     </ul>
