@@ -324,3 +324,6 @@ label em {
 .fileColumn{
     min-width: 350px;
 }
+span.directory>span{
+    font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
+}

@@ -33,13 +33,13 @@
             {{ #indent }}
                 <div class="fileDDD">
                     <span style="padding: 8px" class='directory glyphicon glyphicon-chevron-right' data-container="body" data-toggle="popover" data-placement="right" data-content="{{ Comment }}">
-                        {{ name }}
+                        <span>{{ name }}</span>
                     </span>
                 </div>
             {{ /indent }}
             {{ ^indent }}
                 <span style="padding: 8px" class='directory glyphicon glyphicon-chevron-right' data-container="body" data-toggle="popover" data-placement="right" data-content="{{ Comment }}">
-                    {{ name }}
+                    <span>{{ name }}</span>
                 </span>
             {{ /indent }}
         </td>
