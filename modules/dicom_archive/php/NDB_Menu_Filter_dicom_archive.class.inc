@@ -1,7 +1,7 @@
 <?php
 
 /**
- * This class features the code for the menu portion 
+ * This class features the code for the menu portion
  * of the Loris dicom archive.
  *
  * PHP Version 5
@@ -13,8 +13,6 @@
  * @license    @GPLv3
  * @link       https://www.github.com/olgatsib/Loris-Trunk/
  */
-
-require_once 'NDB_Menu_Filter.class.inc';
 
 /**
  * Provides the PHP code for the menu filter for the dicom archive
@@ -29,7 +27,7 @@ require_once 'NDB_Menu_Filter.class.inc';
 class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
 {
     var $dicomArchiveSettings;
-    
+
     /**
      * Determine whether the user has permission to view this page
      *
@@ -40,7 +38,7 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
         $user = User::singleton();
         return $user->hasPermission('dicom_archive_view_allsites');
     }
-    
+
     /**
      * Set up the variables required by NDB_Menu_Filter class for constructing
      * a query
@@ -50,21 +48,19 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
     function _setupVariables()
     {
         $this->_setDicomArchiveSettings();
-                
+
         $this->query = " FROM tarchive t
             LEFT JOIN session s ON (s.ID=t.SessionID)
             LEFT JOIN candidate c ON (c.CandID=s.CandID) WHERE 1=1";
 
         $colsFirst = array(
-            't.TarchiveID as TarchiveID',
-            's.ID as SessionID'
         );
-        
+
         $TransferStatus = $this->_getTransferStatusFromQuery();
-        $arrayTransfer = array($TransferStatus . " as Transfer_Status");         
+        $arrayTransfer = array($TransferStatus . " as Transfer_Status");
 
         $colsFirst = array_merge($colsFirst, $arrayTransfer);
-        
+
         $colsLast = array(
             't.PatientID as Patient_ID',
             't.PatientName as Patient_Name',
@@ -73,15 +69,18 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
             't.DateAcquired as Acquisition',
             't.ArchiveLocation as Archive_Location',
             "'View Details' as Metadata",
-            "'View Images' as MRI_Browser"
+            "'View Images' as MRI_Browser",
+            // For constructing links, not in headers array
+            't.TarchiveID as TarchiveID',
+            's.ID as SessionID'
         );
 
         $this->columns = array_merge($colsFirst, $colsLast);
 
         $this->order_by = 't.DateAcquired';
-                
-        $this->headers 
-            = ($this->dicomArchiveSettings['showTransferStatus'] == 'true') ? 
+
+        $this->headers
+            = ($this->dicomArchiveSettings['showTransferStatus'] == 'true') ?
             array(
                 'Transfer_Status',
                 'Patient_ID',
@@ -92,7 +91,7 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
                 'Archive_Location',
                 'Metadata',
                 'MRI_Browser'
-            ) : 
+            ) :
             array(
                 'Patient_ID',
                 'Patient_Name',
@@ -103,7 +102,7 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
                 'Metadata',
                 'MRI Browser'
             );
-       
+
         $this->validFilters = array(
             'c.CenterID',
             't.PatientID',
@@ -123,30 +122,30 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
             'DoB' => 't.PatientDoB',
             'Location' => 't.ArchiveLocation'
         );
-       
+
     }
     /**
-    * Sets transfer status according to the data in the 
+    * Sets transfer status according to the data in the
     * config file.
-    * 
+    *
     * @return null
-    */ 
-    function _setDicomArchiveSettings() 
+    */
+    function _setDicomArchiveSettings()
     {
         $config =& NDB_Config::singleton();
-        $this->dicomArchiveSettings = $config->getSetting('dicom_archive'); 
+        $this->dicomArchiveSettings = $config->getSetting('dicom_archive');
     }
-    
+
     /**
     * Retrieves Transfer status.
-    * Queued if pending, date of sending if sent, 
-    * else not transferred 
+    * Queued if pending, date of sending if sent,
+    * else not transferred
     *
     * @return string $query with a status string
     */
-    function _getTransferStatusFromQuery() 
+    function _getTransferStatusFromQuery()
     {
-        if ($this->dicomArchiveSettings['showTransferStatus'] == 'true') { 
+        if ($this->dicomArchiveSettings['showTransferStatus'] == 'true') {
             $query = "IF(
                 t.PendingTransfer, 
                 'Queued', 
@@ -155,13 +154,13 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
                     CONCAT('Sent ', t.DateSent), 
                     'Not transferred'
                 )
-            )";	
+            )";
         } else {
-            $query = "CONCAT(t.PendingTransfer, ' ', t.DateSent)"; 
+            $query = "CONCAT(t.PendingTransfer, ' ', t.DateSent)";
         }
         return $query;
     }
-    
+
     /**
      * Setup $this->tpl_data for use by Smarty
      *
@@ -170,10 +169,7 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
     function _setFilterForm()
     {
         $list_of_sites = array('' => 'All');
-        $sitesList = Utility::getSiteList(false);
-        if (Utility::isErrorX($sitesList)) {
-            return PEAR::raiseError("DB Error: ".$sitesList->getMessage());
-        }
+        $sitesList = Utility::getSiteList();
 
         foreach ($sitesList as $key=>$value) {
             $list_of_sites[$key]= $value;
@@ -189,21 +185,21 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
             'Gender', 'Gender', array('size' => 10, "maxlength" => 25)
         );
         $this->addBasicText(
-            'Acquisition', 
-            'Acquisition Date', 
+            'Acquisition',
+            'Acquisition Date',
             array('size' => 10, "maxlength" => 25)
         );
         $this->addBasicText(
-            'PatientName', 
-            'Patient Name', 
+            'PatientName',
+            'Patient Name',
             array('size' => 10, "maxlength" => 25)
-        ); 	
+        );
         $this->addBasicText(
             'DoB', 'Date of Birth', array('size' => 10, "maxlength" => 25)
         );
         $this->addBasicText(
-            'Location', 
-            'Archive Location', 
+            'Location',
+            'Archive Location',
             array('size' => 10, "maxlength" => 25)
         );
 
@@ -231,11 +227,11 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
             if ($this->dicomArchiveSettings['showTransferStatus'] == 'false') {
                 unset($item['Transfer_Status']);
             }
-            
-            // set sessionID and remove the column       
+
+            // set sessionID and remove the column
             $sessionID = $item['SessionID'];
             unset($item['SessionID']);
-  
+
             // set tarchiveID and remove the column
             $tarchiveID = $item['TarchiveID'];
             unset($item['TarchiveID']);
@@ -244,40 +240,40 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
                 if ($key == 'Transfer_Status') {
                     switch ($val) {
                     case 'Queued':
-                        $this->tpl_data['items'][$x][$i]['class'] 
+                        $this->tpl_data['items'][$x][$i]['class']
                             = "tarchivePendingTransfer";
                         break;
                     case 'Not Transferred':
-                        $this->tpl_data['items'][$x][$i]['class'] 
+                        $this->tpl_data['items'][$x][$i]['class']
                             = "tarchiveNotTransferred";
                         break;
-                    default:    
-                        $this->tpl_data['items'][$x][$i]['class'] 
+                    default:
+                        $this->tpl_data['items'][$x][$i]['class']
                             = "tarchiveTransferred";
-                    } 
+                    }
                 }
                 if ($key == 'Metadata') {
                     $this->tpl_data['items'][$x][$i]['tarchiveID'] = $tarchiveID;
-                } 
+                }
                 if ($key == 'MRI_Browser') {
                     $this->tpl_data['items'][$x][$i]['sessionID'] = $sessionID;
                 }
 
-              
+
                 // check if names and ids are valid
                 if ($key == 'Patient_ID') {
                     $regex = 'patientIDRegex';
-                } 
-              
+                }
+
                 if ($key == 'Patient_ID') {
                     if (! preg_match($this->dicomArchiveSettings[$regex], $val)) {
                         $this->tpl_data['items'][$x][$i]['class'] = "error";
-                        $this->tpl_data['items'][$x][$i]['value'] 
-                            = "INVALID - HIDDEN";    
+                        $this->tpl_data['items'][$x][$i]['value']
+                            = "INVALID - HIDDEN";
                     } else {
                         $this->tpl_data['items'][$x][$i]['value'] = $val;
                     }
-                } elseif ($key == 'Patient_Name'){ 
+                } elseif ($key == 'Patient_Name'){
                    if (!preg_match($this->dicomArchiveSettings['patientNameRegex'], $val) &&
                        !preg_match($this->dicomArchiveSettings['LegoPhantomRegex'], $val) &&
                        !preg_match($this->dicomArchiveSettings['LivingPhantomRegex'], $val)) {
@@ -303,8 +299,55 @@ class NDB_Menu_Filter_Dicom_Archive extends NDB_Menu_Filter
             $x++;
         }
         $this->tpl_data['numTimepoints'] = $this->TotalItems;
-       
+
         return true;
+    }
+
+    function toArray() {
+        $unanonymized = parent::toArray();
+        $retVal = array(
+            'Headers' => $unanonymized['Headers'],
+        );
+        $data = array();
+
+        foreach ($unanonymized['Data'] as &$row) {
+            $val = $row[2];
+            if (!preg_match($this->dicomArchiveSettings['patientNameRegex'], $val) &&
+                !preg_match($this->dicomArchiveSettings['LegoPhantomRegex'], $val) &&
+                !preg_match($this->dicomArchiveSettings['LivingPhantomRegex'], $val)
+            ) {
+                $row[2] = "INVALID - HIDDEN";
+            }
+
+            $val = $row[1];
+            if (! preg_match($this->dicomArchiveSettings['patientIDRegex'], $val)) {
+                $row[1] = 'INVALID - HIDDEN';
+            }
+
+            // remove Transfer_Status column if showTransferStatus is false
+            if ($this->dicomArchiveSettings['showTransferStatus'] == 'false') {
+                array_shift($row);
+            }
+
+            $data[] = $row;
+        }
+        return array(
+            'Headers' => $unanonymized['Headers'],
+            'Data' => $data,
+        );
+
+    }
+    function getJSDependencies() {
+        $factory = NDB_Factory::singleton();
+        $baseURL = $factory->settings()->getBaseURL();
+        $deps    = parent::getJSDependencies();
+        return array_merge(
+            $deps,
+            array(
+                $baseURL . "/dicom_archive/js/columnFormatter.js",
+                $baseURL . "/dicom_archive/js/dicom_archive.js",
+            )
+        );
     }
 }
 ?>

@@ -12,7 +12,6 @@
  * @license  http://www.gnu.org/licenses/gpl-3.0.txt GPLv3
  * @link     https://www.github.com/aces/Loris/
  */
-require_once "NDB_Form.class.inc";
 
 /**
  * Stub class for BrainBrowser module to load
@@ -43,6 +42,52 @@ class NDB_Form_Brainbrowser extends NDB_Form
     function _hasAccess()
     {
         return true;
+    }
+
+    /**
+     * Override base function to include brainbrowser javascript files
+     * and dependencies
+     *
+     * @return array of javascript files to be included
+     */
+    function getJSDependencies()
+    {
+        $factory = NDB_Factory::singleton();
+        $baseURL = $factory->settings()->getBaseURL();
+
+        $deps = parent::getJSDependencies();
+        return array_merge(
+            $deps,
+            array(
+             $baseURL . "/brainbrowser/js/jquery.mousewheel.min.js",
+             $baseURL . "/brainbrowser/js/three.min.js",
+             $baseURL . "/brainbrowser/js/brainbrowser.volume-viewer.min.js",
+             $baseURL . "/brainbrowser/js/brainbrowser.config.js",
+             $baseURL . "/brainbrowser/js/brainbrowser.loris.js",
+            )
+        );
+    }
+
+    /**
+     * Include additional CSS files:
+     *  1. brainbrowser.css
+     *  2. volume-viewer-demo.css
+     *  3. surface-viewer-demo.css
+     *
+     * @return array of javascript to be inserted
+     */
+    function getCSSDependencies()
+    {
+        $factory = NDB_Factory::singleton();
+        $baseURL = $factory->settings()->getBaseURL();
+        $deps    = parent::getCSSDependencies();
+        return array_merge(
+            $deps,
+            [
+             $baseURL . "/brainbrowser/css/volume-viewer-demo.css",
+             $baseURL . "/brainbrowser/css/brainbrowser.css",
+            ]
+        );
     }
 }
 ?>
