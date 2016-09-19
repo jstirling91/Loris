@@ -33,8 +33,23 @@ class NDB_Form_new_profile extends NDB_Form
             }
         }
 
+        // set up the arguments to Candidate::createNew
+        $user =& User::singleton();
+        $dob = sprintf("%04d-%02d-%02d", $values['dob1']['Y'], $values['dob1']['M'], $values['dob1']['d']);
+
+        if($config->getSetting('useEDC') == "true"){
+            $edc = sprintf("%04d-%02d-%02d", $values['edc1']['Y'], $values['edc1']['M'], $values['edc1']['d']);
+            if($edc == '0000-00-00') {
+                $edc = NULL;
+            }
+        }
+
         // create the candidate
-        $candID = Candidate::createNew($user->getData('CenterID'), $dob, $edc, $values['gender'], $values['PSCID']);
+        if ($config->getSetting('hashEnabled')){
+            $candID = Candidate::createNew($user->getData('CenterID'), $dob, $edc, $values['gender'], $values['PSCID'], $values['hash_value']);
+        } else {
+            $candID = Candidate::createNew($user->getData('CenterID'), $dob, $edc, $values['gender'], $values['PSCID']);
+        }
 
         // get the candidate
         $candidate =& Candidate::singleton($candID);
@@ -69,6 +84,8 @@ class NDB_Form_new_profile extends NDB_Form
                              'maxYear'         => $endYear - $ageMin
                              );
         $dateAttributes = ['class' => 'form-control input-sm input-date'];
+
+        $this->tpl_data['hashEnabled'] = $config->getSetting('hashEnabled');
 
         // add date of birth
         $this->addBasicDate('dob1', 'Date of Birth', $dateOptions, $dateAttributes);
@@ -115,9 +132,14 @@ class NDB_Form_new_profile extends NDB_Form
 
     function _validate($values)
     {
+        error_log("IN HERE");
         $errors = array();
 
         $config =& NDB_Config::singleton();
+
+        if ($config->getSetting('hashEnabled') && empty($values['hash_value'])) {
+            $errors['hash_value'] = 'Hash Value is required';
+        }
 
         if($values['dob1']['M'] != $values['dob2']['M'] ||
                 $values['dob1']['d'] != $values['dob2']['d'] ||

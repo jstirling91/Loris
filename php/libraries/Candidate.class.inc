@@ -182,13 +182,14 @@ class Candidate
      * @param string $edc         estimated date of confinement written as YYYY-MM-DD
      * @param string $gender      gender, either 'Male' or 'Female'
      * @param string $PSCID       PSCID specified by the user, if available
+     * @param string $hash_value  hash value derived from the candidates information
      *
      * @return int   $candID      candidate id of the new candidate
      * @throws Exception
      * @static
      */
     static public function createNew(
-        $centerID, $dateOfBirth, $edc, $gender, $PSCID = null
+        $centerID, $dateOfBirth, $edc, $gender, $PSCID = null, $hash_value = null
     ) {
         $factory = NDB_Factory::singleton();
         $db      = $factory->database();
@@ -255,6 +256,14 @@ class Candidate
 
         $db->insert('candidate', $setArray);
 
+        if ($config->getSetting('hashEnabled')) {
+            $setArray = array(
+                         'CandID'     => $candID,
+                         'hash_value' => $hash_value,
+                        );
+            $db->insert('hash_values', $setArray);
+        }
+
         // return the new candid
         return $candID;
     }
@@ -291,6 +300,44 @@ class Candidate
 
         if (!empty($row)) {
             return true;
+        }
+
+        return false;
+
+    }
+
+    /**
+     * Checks if candidate exist given a candidate hash_value
+     * Used to check that PSCID matches CandID when entered into the boxes
+     * on the candidate_list form
+     *
+     * @param string $hash_value hash_value to look up
+     *
+     * @return CandID if candidate is found (in candidate table), FALSE otherwise
+     * @throws DatabaseException
+     */
+    static function candidateExistsFromHash($hash_value)
+    {
+        // make a local reference to the Database object
+        $factory = NDB_Factory::singleton();
+        $db      = $factory->database();
+
+        $candidateIDs = array(
+                         ':hash_value' => $hash_value,
+                        );
+
+        // get candidate data from database
+        $query = "SELECT CandID
+            FROM candidate
+            WHERE hash_value = :hash_value AND Active = 'Y'";
+
+        $row = $db->pselectRow($query, $candidateIDs);
+        error_log($hash_value);
+        error_log("HHHHH");
+        error_log(print_r($row, true));
+
+        if (!empty($row)) {
+            return $row['CandID'];
         }
 
         return false;

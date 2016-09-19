@@ -6,14 +6,45 @@
 
 {else}
 
-<br />
-<form method="post" name="new_profile" id="new_profile" class="form-inline">
+<script type="text/javascript" src="{$baseurl}/new_profile/js/asmcrypto.min.js"></script>
+<script type="text/javascript" src="{$baseurl}/new_profile/js/hash_function.js"></script>
 
-    {foreach from=$form.errors item=error}
+<br />
+
+{foreach from=$form.errors item=error}
     <div class="col-sm-12">
         <label class="error col-sm-12">{$error}</label>
     </div>
-    {/foreach}
+{/foreach}
+
+{if $hashEnabled == "true"}
+    <div class="col-sm-12 form-group">
+    	<label class="col-sm-2">First Name:</label>
+		<div class="col-sm-2">
+			<input class="form-control input-sm" type="text" name="first_name" />
+		</div>
+    </div>
+    <div class="col-sm-12 form-group">
+    	<label class="col-sm-2">Middle Name:</label>
+		<div class="col-sm-2">
+			<input class="form-control input-sm" type="text" name="middle_name" />
+		</div>
+    </div>
+    <div class="col-sm-12 form-group">
+    	<label class="col-sm-2">Last Name:</label>
+		<div class="col-sm-2">
+			<input class="form-control input-sm" type="text" name="last_name" />
+		</div>
+    </div>
+    <div class="col-sm-12 form-group">
+    	<label class="col-sm-2">Mother's Maiden Name:</label>
+		<div class="col-sm-2">
+			<input class="form-control input-sm" type="text" name="mother_name" />
+		</div>
+    </div>
+{/if}
+
+<form method="post" name="new_profile" id="new_profile" class="form-inline">
 
 	<div class="form-group col-sm-12">
 		<label class="col-sm-2">{$form.dob1.label}</label>
@@ -61,9 +92,8 @@
     {/if}
 
 	<div class="form-group col-sm-12">
-		<div class="col-sm-12"><input class="btn btn-primary col-sm-offset-2 col-sm-2" name="fire_away" value="Create" type="submit" /></div>
+		<input class="btn btn-primary col-sm-offset-2 col-sm-2" name="fire_away" value="Create" type="submit" />
 	</div>
-</table>
 {$form.hidden}
 </form>
 
