@@ -79,7 +79,7 @@ class CouchDBMRIImporter
      */
     function _generateCandidatesQuery($ScanTypes)
     {
-        $Query = "SELECT c.PSCID, s.Visit_label, s.ID as SessionID, fmric.Comment
+        $Query = "SELECT c.PSCID, s.Visit_label, c.CenterID, s.ID as SessionID, fmric.Comment
                   as QCComment";
         foreach ($ScanTypes as $Scan) {
             $Query .= ", (SELECT f.File FROM files f LEFT JOIN files_qcstatus fqc

@@ -94,7 +94,7 @@ class CouchDBRadiologicalReviewImporter {
         );
 
         // Query to retrieve radiological review data
-        $finalradiologicalreview = $this->SQLDB->pselect("SELECT c.PSCID, s.Visit_label,
+        $finalradiologicalreview = $this->SQLDB->pselect("SELECT c.PSCID, s.Visit_label, c.CenterID,
             eFinal.full_name AS FinalReview_Radiologist, 
             CASE WHEN frr.Review_Done=0 THEN 'No' 
             WHEN frr.Review_Done=1 THEN 'Yes' END as FinalReview_Done, 
