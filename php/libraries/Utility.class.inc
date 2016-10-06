@@ -1264,5 +1264,45 @@ class Utility
         }
         return checkdate($dateElement['M'], $dateElement['d'], $dateElement['Y']);
     }
+
+    /**
+     *
+     */
+    static function getAdvancedPermissions($userID)
+    {
+        $factory = NDB_Factory::singleton();
+        $DB      = $factory->database();
+        $config  = $factory->config();
+
+        $query = "SELECT CenterID, ProjectID
+            FROM advpermissions
+            WHERE UserID=:uID";
+
+        $results = $DB->pselect($query, array('uID' => $userID));
+
+ 	$permissions = array();
+        if ($config->getSetting('useProjects') === "true") {
+	    foreach($results as $value) {
+                if($permissions[$value['CenterID']]) {
+		    if($permissions[$value['CenterID']][$value['ProjectID']]) {
+                        continue;
+    		    } else {
+                        $permissions[$value['CenterID']][$value['ProjectID']] = true;
+                    }
+                } else {
+		    $permissions[$value['CenterID']] = array();
+                    $permissions[$value['CenterID']][$value['ProjectID']] = true;
+                }
+            }
+        } else {
+            foreach($results as $value) {
+                $permissions[$value['CenterID']] = true;
+            }
+        }
+
+        return $permissions;
+
+
+    }
 }
 ?>
