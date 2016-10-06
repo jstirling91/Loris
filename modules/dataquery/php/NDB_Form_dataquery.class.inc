@@ -18,6 +18,9 @@ class NDB_Form_dataquery extends NDB_Form
         $user = User::singleton();
         $username = $user->getUsername();
         $couch = CouchDB::singleton();
+        $config =& NDB_Config::singleton();
+
+        $useProjects = $config->getSetting("useProjects");
 
         $update = $couch->queryView(
             "DQG-2.0",
@@ -89,10 +92,21 @@ class NDB_Form_dataquery extends NDB_Form
         );
         $this->tpl_data['visits'] = Utility::getExistingVisitLabels();
 
+	$advPerm = Utility::getAdvancedPermissions($user->userInfo['ID']);
+
         $sessions = array();
 
         for($i = 0; $i < count($sessionResults); $i++) {
-            $sessions[] = $sessionResults[$i]['key']['identifier'];
+            $temp =$sessionResults[$i]['key'];
+            if($useProjects === 'true') {
+                if($advPerm[$temp['info']['site']][$temp['info']['project']]) {
+                    $sessions[] = $temp['identifier'];
+                }
+            } else {
+                if($advPerm[$temp['info']['site']]) {
+                    $sessions[] = $temp['identifier'];
+                }
+            }            
         }
 
         // $sessions = array_map(function($element) { return $element['key']; }, $sessionResults);
