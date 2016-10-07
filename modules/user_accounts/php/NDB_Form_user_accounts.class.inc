@@ -108,6 +108,22 @@ class NDB_Form_User_Accounts extends NDB_Form
             $defaults['Country']     = htmlspecialchars($defaults['Country']);
             $defaults['Fax']         = htmlspecialchars($defaults['Fax']);
 
+            $advPerm = Utility::getAdvancedPermissions($user->userInfo['ID']);
+            $config  = NDB_Config::singleton();
+
+            if($config->getSetting('useProjects') === 'true') {
+                foreach($advPerm as $sKey => $sValue) {
+                    foreach($sValue as $pKey => $pValue) {
+                        $tempKey = "advPerm[$sKey" . "_$pKey]";
+                        $defaults[$tempKey] = 'on';
+                    }
+                }
+            } else {
+                foreach($advPerm as $sKey => $sValue) {
+                    $tempKey = "advPerm[$sKey]";
+                    $defaults[$tempKey] = 'on';
+                }
+            }
         }
 
         return $defaults;
@@ -166,6 +182,13 @@ class NDB_Form_User_Accounts extends NDB_Form
             $permIDs = $values['permID'];
         }
         unset($values['permID']);
+
+        // store advanced permissions IDs
+        $advPerm = array();
+        if (!empty($values['advPerm'])) {
+            $advPerm = $values['advPerm'];
+        }
+        unset($values['advPerm']);
 
         // store whether to send an email or not
         if (!empty($values['SendEmail'])) {
@@ -285,6 +308,42 @@ class NDB_Form_User_Accounts extends NDB_Form
 
             if (!empty($permIDs)) {
                 $user->addPermissions(array_keys($permIDs));
+            }
+        }
+
+        // Set advanced permissions
+        $DB = Database::singleton();
+
+        $DB->delete(
+            'advpermissions',
+            array('UserID' => $user->userInfo['ID'])
+        );
+
+        if($config->getSetting('useProjects') === 'true') {
+            foreach($advPerm as $key => $value) {
+                if($value === 'on') {
+                    $info = explode('_', $key);
+                    $sucess =  $DB->insert(
+                        'advpermissions',
+                        array(
+                         'UserID'    => $user->userInfo['ID'],
+                         'CenterID'  => $info[0],
+                         'ProjectID' => $info[1],
+                        )
+                    );
+                }
+            }
+        } else {
+            foreach($advPerm as $key => $value) {
+                if($value === 'on') {
+                    $sucess =  $DB->insert(
+                        'advpermissions',
+                        array(
+                         'UserID'   => $user->userInfo['ID'],
+                         'CenterID' => $key,
+                        )
+                    );
+                }
             }
         }
 
@@ -497,6 +556,38 @@ class NDB_Form_User_Accounts extends NDB_Form
                 $attribs
             );
         }
+
+        // Setup for advanced permissions
+        $group[] = $this->form->createElement(
+            'static',
+            null,
+            null,
+            '</div>'
+            . "<h3 id=\"header_supervisors\" class=\"perm_header button\" "
+            . "style=\"text-align: center; margin-top: 5px;\"> "
+            . "Advanced Permissions</h3> "
+            . "<div id=\"perms_supervisors\" style=\"margin-top: 5px;\">"
+        );
+        if($config->getSetting('useProjects') === 'true') {
+            $projects = Utility::getProjectList();
+
+            foreach($siteOptions as $sKey=>$sValue) {
+                foreach($projects as $pKey=>$pValue) {
+                    $group[] = $this->createCheckbox(
+                        "advPerm[$sKey" . "_$pKey]",
+                         "$sValue $pValue <br>"
+                    );
+                }
+            }
+        } else {
+            foreach($siteOptions as $sKey=>$sValue) {
+                $group[] = $this->createCheckbox(
+                    "advPerm[$sKey]",
+                     "$sValue <br>"
+                );
+            }
+        }
+
         $this->addGroup($group, 'PermID_Group', 'Permissions', "", false);
         unset($group);
 
