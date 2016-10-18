@@ -5,7 +5,7 @@
 class NDB_Form_instrument_builder extends NDB_Form
 {
 
-    function _hasAccess() 
+    function _hasAccess()
     {
         return $this->_has_perm('instrument_builder');
     }
@@ -20,6 +20,28 @@ class NDB_Form_instrument_builder extends NDB_Form
 
     }
 
+    /**
+     * Include additional CSS files:
+     *  1. instrument_builder.css
+     *
+     * @return array of CSS to be inserted
+     */
+    function getCSSDependencies()
+    {
+        $factory = NDB_Factory::singleton();
+        $baseURL = $factory->settings()->getBaseURL();
+        $deps    = parent::getCSSDependencies();
+        return array_merge(
+            $deps,
+            [$baseURL . "/instrument_builder/css/instrument_builder.css"]
+        );
+    }
+
+    /**
+     * Include additional JS files
+     *
+     * @return array of JS to be inserted
+     */
     function getJSDependencies() {
         $factory = NDB_Factory::singleton();
         $baseurl = $factory->settings()->getBaseURL();
@@ -29,10 +51,10 @@ class NDB_Form_instrument_builder extends NDB_Form
             array(
              $baseurl . "/instrument_builder/js/instrument_builder.instrument.js",
              $baseurl . "/instrument_builder/js/instrument_builder.rules.js",
-             $baseurl . "/instrument_builder/js/react.elements.js",
              $baseurl . "/instrument_builder/js/react.questions.js",
              $baseurl . "/instrument_builder/js/react.instrument_builder.js",
              $baseurl . "/js/FileSaver.min.js",
+             $baseurl . "/js/components/Tabs.js",
             )
         );
     }

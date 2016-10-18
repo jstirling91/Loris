@@ -142,12 +142,6 @@ class NDB_BVL_Instrument extends NDB_Page
      */
     var $displayAllFields = false;
 
-    /**
-     * True if the page is being previewed from the instrument builder,
-     * and not really loaded.
-     */
-    var $preview = false;
-
     var $WrapperTextElements           = array();
     var $WrapperNumericElements        = array();
     var $WrapperDateWithStatusElements = array();
@@ -170,7 +164,6 @@ class NDB_BVL_Instrument extends NDB_Page
      */
     static function factory($instrument, $commentID, $page, $guarantee_exists = true)
     {
-        include_once 'HTML/QuickForm.php';
         $class = "NDB_BVL_Instrument_$instrument";
 
         // Make sure the instrument class has been included/required!
@@ -189,16 +182,9 @@ class NDB_BVL_Instrument extends NDB_Page
             return;
         }
         if (file_exists($base."project/instruments/$instrument.linst")
-            || $instrument=='instrument_preview'
         ) {
-            if ($instrument == 'instrument_preview') {
-                include_once 'NDB_BVL_Instrument_instrument_preview.class.inc';
-                $obj          = new NDB_BVL_Instrument_instrument_preview();
-                $obj->preview = true;
-            } else {
-                include_once 'NDB_BVL_Instrument_LINST.class.inc';
-                $obj = new \Loris\Behavioural\NDB_BVL_Instrument_LINST();
-            }
+            include_once 'NDB_BVL_Instrument_LINST.class.inc';
+            $obj = new \Loris\Behavioural\NDB_BVL_Instrument_LINST();
         } else {
             if (!class_exists($class)
                 && ($guarantee_exists === true
@@ -272,7 +258,16 @@ class NDB_BVL_Instrument extends NDB_Page
         $instrumentPermissions = $config->getSetting("instrumentPermissions");
 
         //check if instrumentPermissions are being used.
-        if ($instrumentPermissions['useInstrumentPermissions'] == false) {
+        if (!is_array($instrumentPermissions)) {
+            //instrument permissions not used...
+            return true; //default
+        } else if (!array_key_exists(
+            'useInstrumentPermissions',
+            $instrumentPermissions
+        )) {
+            //instrument permissions not used...
+            return true; //default
+        } else if ($instrumentPermissions['useInstrumentPermissions'] == false) {
             //instrument permissions not used...
             return true; //default
         } else { //check if user has instrument's permissions
@@ -387,7 +382,7 @@ class NDB_BVL_Instrument extends NDB_Page
                 'submit',
                 'fire_away',
                 'Save Data',
-                'class=button'
+                array('class' => 'button')
             );
             //$buttons[] = $this->form->createElement('reset', null, 'Reset');
             $this->addGroup($buttons, null, null, "&nbsp;");
@@ -395,98 +390,42 @@ class NDB_BVL_Instrument extends NDB_Page
 
         // get saved data to pre-populate form
         $db = Database::singleton();
-        if ($this->preview !== true) {
-            $defaults = $db->pselect(
-                "SELECT * FROM $this->table WHERE CommentID=:CID",
-                array('CID' => $this->getCommentID())
-            );
-            // set the defaults (call private method _setDefaultsArray
-            // which could be overridden if necessary)
-            $defaults = $this->_setDefaultsArray($defaults[0]);
 
-            // merge in the localDefaults property so that simple
-            // additions to the defaults array no longer requires
-            // overriding the _setDefaultsArray method
-            $defaults = array_merge($defaults, $this->localDefaults);
-        } else {
-            $defaults = $this->localDefaults;
-        }
+        $defaults = $db->pselect(
+            "SELECT * FROM $this->table WHERE CommentID=:CID",
+            array('CID' => $this->getCommentID())
+        );
+        // set the defaults (call private method _setDefaultsArray
+        // which could be overridden if necessary)
+        $defaults = $this->_setDefaultsArray($defaults[0]);
+
+        // merge in the localDefaults property so that simple
+        // additions to the defaults array no longer requires
+        // overriding the _setDefaultsArray method
+        $defaults = array_merge($defaults, $this->localDefaults);
 
         $this->form->setDefaults($defaults);
 
         if ($this->DataEntryType == 'DirectEntry') {
-            $renderer = new HTML_QuickForm_Renderer_Default();
+            $smarty = new Smarty_neurodb;
+
+            $formArray = $this->form->toElementArray();
             if (isset($this->testName)) {
-                $renderer->setFormTemplate(
-                    "<form{attributes}>
-                        <table id=\"instrument_" . $this->testName . "\"
-                          class=\"instrument\">
-                            {content}
-                        </table>
-                        </form>"
-                );
+                $formArray['tableID'] = "instrument_$this->testName";
             } else {
-                $renderer->setFormTemplate(
-                    "<form{attributes}>
-                        <table class=\"instrument\">{content}</table>
-                    </form>"
-                );
+                $formArray['tableID'] = "instrument";
             }
 
-            $renderer->setElementTemplate(
-                "<tr>
-                    <td class=\"lab\">
-                        <!-- BEGIN required -->
-                        <span style=\"color: #ff0000\">*</span>
-                        <!-- END required -->{label}
-                    </td>
-                    <td class=\"ele\">
-                    <!-- BEGIN error -->
-                    <span style=\"color: #ff0000\">{error}</span>
-                    <br />
-                    <!-- END error -->{element}
-                    </td>
-                </tr>"
-            );
-            $renderer->setElementTemplate(
-                "<tr>
-                    <td class=\"lab\">
-                    <i>{label}</i>
-                    </td>
-                    <td class=\"ele\">\t<i>{element}</i></td>
-                </tr>",
-                "static"
-            );
-            $renderer->setHeaderTemplate(
-                "<tr>
-                    <th colspan=\"2\"><br><b>{header}</b></th>
-                 </tr>"
-            );
-
-            // Any static element with the fieldname of "lorisSubHeader" will
-            // be shown with a colspan of 2 so that we can have instructions/labels
-            // in the direct data entry instruments that span into the column for
-            // data entry.
-            $renderer->setElementTemplate(
-                "<tr>
-                    <td colspan=\"2\"><br>{label}</td>
-                </tr>",
-                'lorisSubHeader'
-            );
-            $this->form->accept($renderer);
-            $html = $renderer->toHtml();
+            $smarty->assign('form', $formArray);
+            $html = $smarty->fetch("directentry_form.tpl");
         } elseif (isset($_REQUEST['json']) == 'true') {
             // Mostly here for debugging. Realisticly, the JSON
             // representation will be retrieved through the API,
             // not the display function.
             return $this->toJSON();
         } else {
-            $smarty   = new Smarty_neurodb;
-            $renderer = new HTML_QuickForm_Renderer_Array($smarty);
-
-            $this->form->accept($renderer);
-
-            $formArray = $renderer->toArray();
+            $smarty    = new Smarty_neurodb;
+            $formArray = $this->form->toElementArray();
 
             $smarty->assign('form', $formArray);
             $html = $smarty->fetch("instrument_html.tpl");
@@ -510,12 +449,6 @@ class NDB_BVL_Instrument extends NDB_Page
         //Convert date/time fields into quickform date/timestamps
         if (empty($this->dateTimeFields)) {
             $this->dateTimeFields = array("Date_taken");
-        }
-        foreach ($this->dateTimeFields as $field) {
-            $defaults[$field] = $this->_getQuickformDate($defaults[$field]);
-        }
-        foreach ($this->monthYearFields as $field) {
-            $defaults[$field] = $this->_getQuickformDate($defaults[$field]);
         }
 
         if (isset($defaults['Window_Difference'])
@@ -713,29 +646,6 @@ class NDB_BVL_Instrument extends NDB_Page
         //Convet date/timestamps into database format
         if (empty($this->dateTimeFields)) {
             $this->dateTimeFields = array("Date_taken");
-        }
-
-        //Convert date/time fields into database dates/times
-        if (is_array($this->dateTimeFields) && count($this->dateTimeFields) > 0) {
-            foreach ($this->dateTimeFields as $field) {
-                if (isset($values[$field])) {
-                    //Stops it from wiping dates already saved on other pages.
-                    $values[$field] = $this->_getDatabaseDate($values[$field]);
-                }
-            }
-        }
-
-        //Convert date/time fields into database dates/times
-        if (is_array($this->monthYearFields)
-            && count($this->monthYearFields) > 0
-        ) {
-            foreach ($this->monthYearFields as $field) {
-                //Stops it from wiping dates already saved on other pages.
-                if (isset($values[$field])) {
-                    $values[$field]['d'] = 15;
-                    $values[$field]      = $this->_getDatabaseDate($values[$field]);
-                }
-            }
         }
 
         if (strrpos($this->testName, "_proband") === false) {
@@ -1090,14 +1000,50 @@ class NDB_BVL_Instrument extends NDB_Page
     function _getDatabaseDate($formDateValue)
     {
         if (!empty($formDateValue)) {
-            if (count($formDateValue)==2) {
-                //handle time (HH:MM:SS)
-                $databaseValue = "$formDateValue[H]:$formDateValue[i]";
-            } else {
-                //handle date (YYYY/MM/DD)
-                $databaseValue = "$formDateValue[Y]-"
-                    . "$formDateValue[M]-"
-                    . "$formDateValue[d]";
+
+            $databaseValue = "";
+
+            if (array_key_exists("Y", $formDateValue)
+                || array_key_exists("M", $formDateValue)
+                || array_key_exists("d", $formDateValue)
+            ) {
+
+                if (array_key_exists("Y", $formDateValue)) {
+                    $yearString = $formDateValue[Y];
+                } else {
+                    $yearString = "0001";
+                }
+
+                if (array_key_exists("M", $formDateValue)) {
+                    $monthString = $formDateValue[M];
+                } else {
+                    $monthString = "01";
+                }
+
+                if (array_key_exists("d", $formDateValue)) {
+                    $dayString = $formDateValue[d];
+                } else {
+                    $dayString = "01";
+                }
+
+                $databaseValue = $yearString . "-" . $monthString . "-" . $dayString;
+
+            } elseif (array_key_exists("H", $formDateValue)
+                || array_key_exists("i", $formDateValue)
+            ) {
+                if (array_key_exists("H", $formDateValue)) {
+                    $hourString = $formDateValue[H];
+                } else {
+                    $hourString = "01";
+                }
+                if (array_key_exists("i", $formDateValue)) {
+                    $minuteString = $formDateValue[i];
+                } else {
+                    $minuteString = "01";
+                }
+
+                $databaseValue = $hourString . ":" . $minuteString;
+
             }
         }
         return $databaseValue;
@@ -1113,27 +1059,10 @@ class NDB_BVL_Instrument extends NDB_Page
      */
     function _getQuickformDate($databaseValue)
     {
-        $formDateValue = null;
-        if (!empty($databaseValue)) {
-            if (strstr($databaseValue, ":")) {
-                //handle time
-                $formDateValue = explode(":", $databaseValue);
-                $formDateValue = array(
-                                  "H" => $formDateValue[0],
-                                  "i" => $formDateValue[1],
-                                 );
-            } else {
-                //handle date
-                // split mysql Date_taken field into array
-                $formDateValue = explode('-', $databaseValue);
-                $formDateValue = array(
-                                  'Y' => $formDateValue[0],
-                                  'M' => $formDateValue[1],
-                                  'd' => $formDateValue[2],
-                                 );
-            }
-        }
-        return $formDateValue;
+        throw new Exception(
+            "The function _getQuickformDate has been depricated. 
+            Please contact LORIS developer mail list for support."
+        );
     }
 
 
@@ -1669,15 +1598,14 @@ class NDB_BVL_Instrument extends NDB_Page
                 . "if you want to leave this time blank.";
         }
 
-        $group[] =& $this->createDate(
+        $group[] =& $this->form->createElement(
+            "time",
             $field,
             null,
-            array(
-             'language'       => 'en',
-             'format'         => 'H:i',
-             'addEmptyOption' => true,
-            )
+            $dateOptions,
+            $attr
         );
+
         $group[] =& $this->createSelect(
             $field . "_status",
             "",
@@ -2046,6 +1974,27 @@ class NDB_BVL_Instrument extends NDB_Page
             return $age; //$age['year'] + ($age['mon'] / 12) + ($age['day'] / 30);
         }
         return;
+    }
+
+    /**
+     * Get the candidates PSCID.
+     *
+     * @return The candidate's PSCID.
+     */
+    function getPSCID()
+    {
+        $db        =& Database::singleton();
+        $CommentID = $this->getCommentID();
+
+        $pscid = $db->pselectOne(
+            "SELECT c.PSCID FROM $this->testName i
+            JOIN flag f USING (CommentID)
+            JOIN session s ON (f.SessionID=s.ID)
+            JOIN candidate c USING (CandID)
+            WHERE f.CommentID=:CID",
+            array('CID' => $CommentID)
+        );
+        return $pscid;
     }
 
     /**

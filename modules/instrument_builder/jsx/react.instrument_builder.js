@@ -4,29 +4,10 @@
  */
 
 /**
- *	Base class for tabs within the UI of the instrument builder
- */
-TabPane = React.createClass({
-    render: function() {
-        var classList = "tab-pane";
-        if(this.props.Active) {
-            classList += " active"
-        }
-        // Render the HTML
-        return (
-            <div className={classList} id={this.props.TabId}>
-                <h1 className="tabHeader">{this.props.Title}</h1>
-                	{this.props.children}
-            </div>
-        );
-    }
-});
-
-/**
  *	This is the React class for loading in a previously
  *	made instrument.
  */
-LoadPane = React.createClass({
+var LoadPane = React.createClass({
 	getInitialState: function() {
 	 	return {
 	 		// This is used to alert the user if the file was
@@ -87,9 +68,8 @@ LoadPane = React.createClass({
 				break;
 		}
 		return (
-			<TabPane Title="Load Instrument"
-                TabId={this.props.TabId}>
-                	<div className="col-sm-4 col-xs-12">
+			<TabPane Title="Load Instrument" TabId={this.props.TabId}>
+                	<div className="col-sm-6 col-xs-12">
                 		{alert}
 						<input className="fileUpload"
 							   type="file" id="instfile"
@@ -109,7 +89,7 @@ LoadPane = React.createClass({
 /**
  *	This is the React class for saving the instrument
  */
-SavePane = React.createClass({
+var SavePane = React.createClass({
 	getInitialState: function() {
 	 	return {
 	 		fileName: '',
@@ -180,144 +160,152 @@ SavePane = React.createClass({
 });
 
 /**
- *	This is the React class displaying the questions
- *	in the table.
+ *  This is the React class displaying the questions
+ *  in the table.
  */
-DisplayElements = React.createClass({
-	// Used for the drag and drop rows
-	getPlaceholder: function() {
-	    if (!this.placeholder) {
-	      var tr = document.createElement('tr');
-	      tr.className = "placeholder";
-	      var td = document.createElement('td');
-	      td.colSpan = 2;
-	      td.appendChild(document.createTextNode("Drop here"));
-	      tr.appendChild(td);
-	      this.placeholder = tr;
-	    }
-	    return this.placeholder;
-	},
-	// Used for the drag and drop rows
-	getTableRow: function(element) {
-	    if (element.tagName !== 'tr') {
-	      return $(element).closest('tr')[0];
-	    }
-	    else {
-	      return element;
-	    }
-	},
-	// Used for the drag and drop rows
-	dragStart: function(e) {
-	    this.dragged = this.getTableRow(e.currentTarget);
-	    e.dataTransfer.effectAllowed = 'move';
-	    // Firefox requires dataTransfer data to be set
-	    e.dataTransfer.setData("text/html", e.currentTarget);
-	},
-	// Used for the drag and drop rows
-	dragEnd: function(e) {
-	    this.dragged.style.display = "table-row";
-	    this.dragged.parentNode.removeChild(this.getPlaceholder());
+var DisplayElements = React.createClass({
+  // Used for the drag and drop rows
+  getPlaceholder: function() {
+    if (!this.placeholder) {
+      var tr = document.createElement('tr');
+      tr.className = "placeholder";
+      var td = document.createElement('td');
+      td.colSpan = 2;
+      td.appendChild(document.createTextNode("Drop here"));
+      tr.appendChild(td);
+      this.placeholder = tr;
+    }
+    return this.placeholder;
+  },
+  // Used for the drag and drop rows
+  getTableRow: function(element) {
+    if (element.tagName !== 'tr') {
+      return $(element).closest('tr')[0];
+    }
+    else {
+      return element;
+    }
+  },
+  // Used for the drag and drop rows
+  dragStart: function(e) {
+    this.dragged = this.getTableRow(e.currentTarget);
+    e.dataTransfer.effectAllowed = 'move';
+    // Firefox requires dataTransfer data to be set
+    e.dataTransfer.setData("text/html", e.currentTarget);
+  },
+  // Used for the drag and drop rows
+  dragEnd: function(e) {
+    this.dragged.style.display = "table-row";
+    this.dragged.parentNode.removeChild(this.getPlaceholder());
 
-	    // Update data
-	    var data = this.props.elements;
-	    var from = Number(this.dragged.dataset.id);
-	    var to = Number(this.over.dataset.id);
-	    if (from < to) to--;
-	    if (this.nodePlacement == "after") to++;
-	    data.splice(to, 0, data.splice(from, 1)[0]);
-	    this.setState({
-	    	data: data
-	   	});
-	},
-	// Used for the drag and drop rows
-	dragOver: function(e) {
-	    e.preventDefault();
-	    var targetRow = this.getTableRow(e.target);
+    // Update data
+    var data = this.props.elements;
+    var from = Number(this.dragged.dataset.id);
+    var to = Number(this.over.dataset.id);
+    if (from < to) to--;
+    if (this.nodePlacement == "after") to++;
+    data.splice(to, 0, data.splice(from, 1)[0]);
+    this.setState({
+      data: data
+    });
+  },
+  // Used for the drag and drop rows
+  dragOver: function(e) {
+    e.preventDefault();
+    var targetRow = this.getTableRow(e.target);
 
-	    this.dragged.style.display = "none";
-	    if (targetRow.className == "placeholder") return;
-	    this.over = targetRow;
-	    // Inside the dragOver method
-	    var relY = e.pageY - $(this.over).offset().top;
-	    var height = this.over.offsetHeight / 2;
-	    var parent = targetRow.parentNode;
+    this.dragged.style.display = "none";
+    if (targetRow.className == "placeholder") return;
+    this.over = targetRow;
+    // Inside the dragOver method
+    var relY = e.pageY - $(this.over).offset().top;
+    var height = this.over.offsetHeight / 2;
+    var parent = targetRow.parentNode;
 
-	    if (relY >= height) {
-	      this.nodePlacement = "after";
-	      parent.insertBefore(this.getPlaceholder(), targetRow.nextElementSibling);
-	    }
-	    else { // relY < height
-	      this.nodePlacement = "before"
-	      parent.insertBefore(this.getPlaceholder(), targetRow);
-	    }
-	},
-	// Render the HTML
-	render: function () {
-		var temp = this.props.elements.map((function(element, i){
-						var row;
-						if(element.editing){
-							// If you are editing an element, show element as an AddElement object
-							row = (
-								<tr data-id={i}
-					            key={i}
-					            draggable={this.props.draggable}
-					            onDragEnd={this.dragEnd}
-					            onDragStart={this.dragStart}>
-									<td className="col-xs-2" colSpan="3">
-										<AddElement updateQuestions={this.props.updateElement} element={element} index={i}/>
-									</td>
-								</tr>
-							)
-						} else {
-							// Else display element in regular way
-							row = (
-								<tr data-id={i}
-					            key={i}
-					            draggable={this.props.draggable}
-					            onDragEnd={this.dragEnd}
-					            onDragStart={this.dragStart}>
-									<td className="col-xs-2">
-										{element.Name}
-									</td>
-									<td className="col-xs-8">
-										<LorisElement element={element} />
-									</td>
-									<td className="col-xs-2">
-										<button onClick={this.props.editElement.bind(this, i)} className="button">
-											Edit
-										</button>
-										<button onClick={this.props.deleteElement.bind(this, i)} className="button">
-											Delete
-										</button>
-									</td>
-								</tr>
-							)
-						}
-						return (
-							{row}
-						)
-					}).bind(this));
-		return (
-			<table id="sortable" className="table table-hover">
-				<thead>
-					<tr>
-						<th className="col-xs-2">Database Name</th>
-						<th>Question Display (Front End)</th>
-						<th>Edit</th>
-					</tr>
-				</thead>
-				<tbody onDragOver={this.dragOver}>
-					{temp}
-				</tbody>
-			</table>
-		)
-	}
+    if (relY >= height) {
+      this.nodePlacement = "after";
+      parent.insertBefore(this.getPlaceholder(), targetRow.nextElementSibling);
+    }
+    else { // relY < height
+      this.nodePlacement = "before"
+      parent.insertBefore(this.getPlaceholder(), targetRow);
+    }
+  },
+  // Render the HTML
+  render: function() {
+    var temp = this.props.elements.map((function(element, i) {
+      var row;
+      var colStyles = {'wordWrap': 'break-word'};
+      if (element.editing) {
+        // If you are editing an element, show element as an AddElement object
+        row = (
+          <tr data-id={i}
+              key={i}
+              draggable={this.props.draggable}
+              onDragEnd={this.dragEnd}
+              onDragStart={this.dragStart}>
+            <td className="col-xs-2" colSpan="3">
+              <AddElement updateQuestions={this.props.updateElement}
+                          element={element} index={i}/>
+            </td>
+          </tr>
+        )
+      } else {
+        // Else display element in regular way
+        row = (
+          <tr data-id={i}
+              key={i}
+              draggable={this.props.draggable}
+              onDragEnd={this.dragEnd}
+              onDragStart={this.dragStart}>
+            <td style={colStyles}>
+              {element.Name}
+            </td>
+            <td style={colStyles}>
+              <LorisElement element={element}/>
+            </td>
+            <td style={colStyles}>
+              <button onClick={this.props.editElement.bind(this, i)} className="button">
+                Edit
+              </button>
+              <button onClick={this.props.deleteElement.bind(this, i)} className="button">
+                Delete
+              </button>
+            </td>
+          </tr>
+        )
+      }
+      return (
+      {row}
+      )
+    }).bind(this));
+
+    // Set fixed layout to force column widths to be based on first row
+    var tableStyles = {
+      tableLayout: 'fixed'
+    };
+
+    return (
+      <table id="sortable" className="table table-hover" style={tableStyles}>
+        <thead>
+        <tr>
+          <th className="col-xs-2">Database Name</th>
+          <th className="col-xs-6">Question Display (Front End)</th>
+          <th className="col-xs-4">Edit</th>
+        </tr>
+        </thead>
+        <tbody onDragOver={this.dragOver}>
+          {temp}
+        </tbody>
+      </table>
+    )
+  }
 });
 
 /**
  *	This is the React class for building the instrument
  */
-BuildPane = React.createClass({
+var BuildPane = React.createClass({
 	getInitialState: function() {
 	 	return {
 	 		// Keep track of the page groups
@@ -339,13 +327,22 @@ BuildPane = React.createClass({
 	 		elementDBNames : {}
 	 	};
 	},
-	// Load in a group of elements, replacing any that
-	// were already present
-	loadElements: function(elements) {
-		this.setState({
-			Elements: elements
-		});
-	},
+  // Load in a group of elements, replacing any that
+  // were already present
+  loadElements: function(elements) {
+
+    // Populate existing DB names
+    var elContent = elements[this.state.currentPage].Elements;
+    var elNames = {};
+    elContent.forEach(function(el) {
+       elNames[el.Name] = "";
+    });
+
+    this.setState({
+      Elements: elements,
+      elementDBNames: elNames
+    });
+  },
 	// Set the element editing flag to true to render the element
 	// as an AddQuestion object. Increase the number of editing to
 	// disable drag and drop
@@ -408,6 +405,7 @@ BuildPane = React.createClass({
 	},
 	// Add a new question to the page's elements
 	addQuestion: function(element){
+
 		if (element.Name && element.Name in this.state.elementDBNames){
 			// If the DB name already exists return false.
 			return false;
@@ -470,8 +468,7 @@ BuildPane = React.createClass({
 			                );
 			        	}));
 		return (
-			<TabPane Title="Build your Instrument"
-                TabId={this.props.TabId} Active={true}>
+			<TabPane Title="Build your Instrument" TabId={this.props.TabId}>
                 	<div className="form-group col-xs-12">
 					    <label for="selected-input" className="col-xs-2 col-sm-1 control-label">Page:</label>
 			            <div className="col-sm-4">
@@ -504,7 +501,7 @@ BuildPane = React.createClass({
 /**
  *	This is the React class for the instrument builder
  */
-InstrumentBuilderApp = React.createClass({
+var InstrumentBuilderApp = React.createClass({
 	// Save the instrument
 	saveInstrument: function(){
 		// Call to external function, passing it the save information and the elements
@@ -520,43 +517,53 @@ InstrumentBuilderApp = React.createClass({
 		// Set the alert state to success in the loadPane
 		this.refs.loadPane.setAlert('success');
 	},
-	// Render the HTML
-	render: function () {
-		var tabs = [];
-		tabs.push(
-			<LoadPane
-				TabId="Load"
-				ref="loadPane"
-				loadCallback={this.loadCallback}
-			/>
-		);
-		tabs.push(
-			<BuildPane
-				TabId="Build"
-				ref="buildPane"
-			/>
-		);
-		tabs.push(
-			<SavePane
-				TabId="Save"
-				ref="savePane"
-				save={this.saveInstrument}
-			/>
-		);
-		return (
-			<div>
-				<ul className="nav nav-tabs" role="tablist">
-					<li role="presentation"><a href="#Load" aria-controls="home" role="tab" data-toggle="tab">Load</a></li>
-				    <li role="presentation" className="active"><a href="#Build" aria-controls="build" role="tab" data-toggle="tab">Build</a></li>
-				    <li role="presentation"><a href="#Save" aria-controls="messages" role="tab" data-toggle="tab">Save</a></li>
-				 </ul>
+  // Render the HTML
+  render: function () {
+    var tabs = [];
+    tabs.push(
+      <LoadPane
+        TabId="Load"
+        ref="loadPane"
+        loadCallback={this.loadCallback}
+      />
+    );
+    tabs.push(
+      <BuildPane
+        TabId="Build"
+        ref="buildPane"
+      />
+    );
+    tabs.push(
+      <SavePane
+        TabId="Save"
+        ref="savePane"
+        save={this.saveInstrument}
+      />
+    );
 
-			  	<div className="tab-content col-xs-12">
-				    {tabs}
-			  	</div>
-			</div>
-		)
-	}
+    var tabList = [
+      {
+          "id" : "Load",
+          "label" : "Load"
+      },
+      {
+          "id" : "Build",
+          "label" : "Build"
+      },
+      {
+          "id" : "Save",
+          "label" : "Save"
+      }
+    ];
+
+    return (
+      <div>
+        <Tabs tabs={tabList} defaultTab="Build">
+            {tabs}
+        </Tabs>
+      </div>
+    );
+  }
 });
 
 RInstrumentBuilderApp = React.createFactory(InstrumentBuilderApp);

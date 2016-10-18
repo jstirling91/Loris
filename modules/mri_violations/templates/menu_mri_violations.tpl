@@ -92,7 +92,7 @@
         </ul>
         <div class="tab-content">
             <div class="tab-pane active">
-                <div class="row">
+                <div>
                     <!--  title table with pagination -->
                     <table id="LogEntries" border="0" valign="bottom" width="100%">
                         <tr>
@@ -135,6 +135,10 @@
                                                         {$items[item][piece].value}
                                                     </a>
                                                 </td>
+                                            {elseif $items[item][piece].name eq 'MincFileViolated'}
+                                                <td nowrap="nowrap" bgcolor="{$items[item][piece].bgcolor}">
+						                            <a href="#noID" onclick="window.open('{$baseurl}/brainbrowser/?minc_location={$items[item][piece].value}', 'BrainBrowser Volume Viewer', 'location = 0,width = auto, height = auto, scrollbars=yes')">{$items[item][piece].value}</a>
+                                                </td>
                                             {elseif $items[item][piece].value eq 'Protocol Violation'}
                                                 <td nowrap="nowrap" bgcolor="{$items[item][piece].bgcolor}">
                                                     <a href="#" class="mri_violations" id="mri_protocol_check_violations" data-PatientName="{$items[item].PatientName}" "{if $items[item].series}" data-SeriesUID="{$items[item].series}{/if}">{{$items[item][piece].value}}</a>
@@ -171,20 +175,13 @@
                                 {sectionelse}
                                 <tr><td colspan="12">No data found</td></tr>
                             {/section}
-                            <tr>
-                                <td nowrap="nowrap" colspan="1"> </td>
-                                <td nowrap="nowrap" colspan="1"> </td>
-                                <td nowrap="nowrap" colspan="1"> </td>
-                                <td nowrap="nowrap" colspan="1"> </td>
-                                <td nowrap="nowrap" colspan="1"> </td>
-                                <td nowrap="nowrap" colspan="1"> </td>
-                                <td nowrap="nowrap" colspan="5">
-                                    <input class="btn btn-sm btn-primary col-md-offset-3" name="fire_away" value="Save" type="submit" />
-                                    <input class="btn btn-sm btn-primary" value="Reset" type="reset" />
-                                </td>
-                            </tr>
                             </tbody>
+
                         </table>
+                        <div class="pull-right">
+                            <input class="btn btn-sm btn-primary" name="fire_away" value="Save" type="submit" />
+                            <input class="btn btn-sm btn-primary" value="Reset" type="reset" />
+                        </div>
                     </form>
                 </div>
             </div>
@@ -197,7 +194,7 @@ var pageLinks = RPaginationLinks(
     RowsPerPage : {$rowsPerPage},
     Total: {$TotalItems},
     onChangePage: function(pageNum) {
-        location.href="{$baseurl}/mri_violations/?pageID=" + pageNum
+        location.href="{$baseurl}/mri_violations/?filter[order][field]={$filterfield}&filter[order][fieldOrder]={$filterfieldOrder}&pageID=" + pageNum
     },
     Active: {$pageID}
 });

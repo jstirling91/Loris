@@ -25,6 +25,7 @@
         <tr class="info">
             <th>Visit Label<BR>(Click to Open)</th>
             <th>Subproject</th>
+            <th>Site</th>
             <th>Stage</th>
             <th>Stage Status</th>
             <th>Date of Stage</th>
@@ -39,9 +40,11 @@
     <tbody>
     {section name=timepoint loop=$timePoints}
         <tr>
-            <td><a href="{$baseurl}/instrument_list/?candID={$candID}&sessionID={$timePoints[timepoint].SessionID}/">{$timePoints[timepoint].Visit_label}</a></td>
+            <td><a href="{$baseurl}/instrument_list/?candID={$candID}&sessionID={$timePoints[timepoint].SessionID}">{$timePoints[timepoint].Visit_label}</a></td>
 
             <td>{$timePoints[timepoint].SubprojectTitle}</td>
+
+            <td>{$timePoints[timepoint].CenterName}</td>
 
             {if $timePoints[timepoint].staticStage != "" || $timePoints[timepoint].Current_stage == "Not Started"}
             <td colspan="3">{$timePoints[timepoint].Current_stage}</td>

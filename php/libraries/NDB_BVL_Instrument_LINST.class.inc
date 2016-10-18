@@ -49,7 +49,7 @@ class NDB_BVL_Instrument_LINST extends \NDB_BVL_Instrument
         $this->commentID = $commentID;
         $this->page      = $page;
 
-        $this->form = new \HTML_Quickform('test_form');
+        $this->form = new \LorisForm('test_form');
     }
     /**
      * Adds metadata fields (such as Examiner and Date_taken) to the
@@ -598,21 +598,32 @@ class NDB_BVL_Instrument_LINST extends \NDB_BVL_Instrument
                                            );
                         }
 
-                        if (isset($pieces[5])) {
-                            $pieces[5] = trim($pieces[5]);
-                            if ($pieces[5] === 'MonthYear') {
+                        // Set date format
+                        $dateFormat = isset($pieces[5]) ? trim($pieces[5]) : "";
+
+                        if (isset($dateFormat) && $dateFormat != "") {
+                            if ($dateFormat === 'MonthYear') {
+                                // Shows date without day of month
                                 $this->addMonthYear(
                                     $pieces[1],
                                     $pieces[2],
                                     $dateOptions
                                 );
                             } else {
-                                $this->addDateElement(
+                                // Shows date without not answered dropdown
+                                $this->addBasicDate(
                                     $pieces[1],
                                     $pieces[2],
                                     $dateOptions
                                 );
                             }
+                        } else {
+                            // Shows standard date
+                            $this->addDateElement(
+                                $pieces[1],
+                                $pieces[2],
+                                $dateOptions
+                            );
                         }
                     }
                     $this->LinstQuestions[$pieces[1]] = array('type' => 'date');

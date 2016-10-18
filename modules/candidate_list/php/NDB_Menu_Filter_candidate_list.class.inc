@@ -67,7 +67,8 @@ class NDB_Menu_Filter_Candidate_List extends NDB_Menu_Filter
                           'c.CandID AS DCCID',
                           'c.PSCID',
                           'c.Gender',
-                          "COALESCE(pso.Description,'\"Active\"') "
+                          'c.Entity_type',
+                          "COALESCE(pso.Description,'Active') "
                           . " AS Participant_Status",
                          );
         if ($useProjects) {
@@ -105,7 +106,7 @@ class NDB_Menu_Filter_Candidate_List extends NDB_Menu_Filter
 
         // Need distinct because of joining with feedback_bvl_thread
         $VisitCountSQL = 'COUNT(DISTINCT s.Visit_label)';
-        $FeedbackSQL   = 'MIN(feedback_bvl_thread.Status+0)';
+        $FeedbackSQL   = 'IFNULL(MIN(feedback_bvl_thread.Status+0),0)';
 
         $this->columns = array_merge(
             $this->columns,
@@ -126,7 +127,7 @@ class NDB_Menu_Filter_Candidate_List extends NDB_Menu_Filter
                 ON (ps.participant_status=pso.ID)
             LEFT JOIN Project p ON (c.ProjectID=p.ProjectID)
             LEFT JOIN subproject sp ON (s.SubprojectID=sp.SubprojectID)
-            WHERE c.Entity_type = 'Human' AND c.Active = 'Y'";
+	    WHERE c.Active = 'Y'";
 
         if (!$user->hasPermission('access_all_profiles')) {
             $this->query .= " AND c.CenterID=" . $user->getCenterID();
@@ -149,6 +150,7 @@ class NDB_Menu_Filter_Candidate_List extends NDB_Menu_Filter
              $FeedbackSQL,
              's.Scan_done',
              's.Visit_label',
+             'c.Entity_type',
             )
         );
 
@@ -183,6 +185,7 @@ class NDB_Menu_Filter_Candidate_List extends NDB_Menu_Filter
              'Participant_Status'  => 'pso.ID',
              'scan_done'           => 's.Scan_done',
              'Visit_label'         => 's.Visit_label',
+             'Entity_type'         => 'c.Entity_type',
             )
         );
 
@@ -272,6 +275,15 @@ class NDB_Menu_Filter_Candidate_List extends NDB_Menu_Filter
              ''       => 'All',
              'Male'   => 'Male',
              'Female' => 'Female',
+            )
+        );
+        $this->addSelect(
+            'Entity_type',
+            'Entity Type',
+            array(
+             ''        => '',
+             'Human'   => 'Human',
+             'Scanner' => 'Scanner',
             )
         );
         $this->addSelect(
@@ -410,6 +422,7 @@ class NDB_Menu_Filter_Candidate_List extends NDB_Menu_Filter
             array(
              $baseURL . "/js/advancedMenu.js",
              $baseURL . "/candidate_list/js/columnFormatter.js",
+             $baseURL . "/candidate_list/js/candidate_list_helper.js",
             )
         );
     }

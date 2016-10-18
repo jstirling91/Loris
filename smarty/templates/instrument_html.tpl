@@ -7,14 +7,20 @@
 	     border-top: none; 
 	 }
 </style>
-<form {$form.attributes}>
+<form method="post" name="test_form" id="test_form" {$form.enctype}>
 <div class="row">
 	{$form.hidden}
 	{$form.errors.mainError}
 	{assign var="inTable" value="FALSE"}
 	{foreach from=$form.elements item=element}
 		{if $element.name neq mainError}
-			{if $element.name eq lorisSubHeader}
+			{if $element.type eq header}
+				<div class="col-xs-12">
+					{$element.html}
+				</div>
+			{elseif $element.type eq hidden}
+				{$element.html}
+			{elseif $element.name eq lorisSubHeader}
 				<div class="col-xs-12">
 					{$element.label}
 				</div>

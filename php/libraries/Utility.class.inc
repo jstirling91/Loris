@@ -556,7 +556,7 @@ class Utility
      * @cleanup This should be removed and all uses converted to toArray
      *          (or vice versa, but toArray seems to be more common in the code)
      */
-    function asArray($var)
+    static function asArray($var)
     {
         if (!is_array($var)) {
             return array($var);
@@ -739,6 +739,35 @@ class Utility
         return $instruments;
     }
 
+    /**
+     * Get a list of DDE instruments installed in Loris.
+     *
+     * @return Associative array of the form Test_name => Full Description
+     * @note   Arguably, this should be a static function in NDB_BVL_Instrument
+     */
+    static function getAllDDEInstruments()
+    {
+        $Factory       = NDB_Factory::singleton();
+        $DB            = $Factory->Database();
+        $config        =& NDB_Config::singleton();
+        $instruments_q = $DB->pselect(
+            "SELECT Test_name,Full_name FROM test_names",
+            array()
+        );
+        $doubleDataEntryInstruments = $config->getSetting(
+            'DoubleDataEntryInstruments'
+        );
+
+        $instruments = array();
+        foreach ($instruments_q as $row) {
+            if (isset($row['Test_name']) && isset($row['Full_name'])) {
+                if (in_array($row['Test_name'], $doubleDataEntryInstruments)) {
+                    $instruments[$row['Test_name']] = $row['Full_name'];
+                }
+            }
+        }
+        return $instruments;
+    }
 
     /**
      * Gets a list of all instruments where are administered as direct data
@@ -830,43 +859,6 @@ class Utility
         return $column_threshold;
     }
 
-
-    /**
-     * Checks to see if a table contains a specified column
-     *
-     * @param string $test_name The table to check for a column.
-     * @param string $column    The column name to check the table for.
-     *
-     * @return  boolean true if the table has a the given column
-     * @note    This should be moved to the Database class and references to it
-     *       updated.
-     * @note    Function comment written by Dave, not the author of this function.
-     * @cleanup
-     */
-    static function columnExists($test_name,$column)
-    {
-        $config   =& NDB_Config::singleton();
-        $database = $config->getSetting('database');
-        $query    = "SELECT DISTINCT table_name
-            FROM information_schema.columns
-            WHERE table_name = :tn
-            AND COLUMN_NAME = :cn
-            AND TABLE_SCHEMA = :db";
-        $DB       =& Database::singleton();
-        $effected = $DB->pselectOne(
-            $query,
-            array(
-             'tn' => $test_name,
-             'cn' => $column,
-             'db' => $database,
-            )
-        );
-        if ($effected) {
-            return true;
-        }
-        return false;
-    }
-
     /**
      * Checks to see if a table contains a specified column
      *
@@ -881,7 +873,7 @@ class Utility
         //$database = $config->getSetting('database');
         $query    = "SELECT count(*)
             FROM {$table_name}
-            WHERE {$column} is NULL;";
+            WHERE {$column} is NULL";
         $DB       =& Database::singleton();
         $num_null = $DB->pselectOne(
             $query,
@@ -1096,7 +1088,7 @@ class Utility
             JOIN psc ON (s.CenterID = psc.CenterID)
             WHERE c.Active = 'Y'
             AND s.Active = 'Y'
-            AND c.PSCID NOT LIKE '%scanner%'
+            AND c.Entity_type != 'Scanner'
             AND psc.CenterID!= '1'
             $ExtraProject_Criteria ORDER BY Visit_label";
         $visitlabels = $db->pselect($query, array());
@@ -1127,7 +1119,7 @@ class Utility
     {
         $DB =& Database::singleton();
 
-        if (Utility::ColumnExists('test_battery', 'Test_name_display')) {
+        if ($DB->ColumnExists('test_battery', 'Test_name_display')) {
             $test_names = $DB->pselect(
                 "SELECT DISTINCT Test_name_display FROM test_battery 
                 WHERE Visit_label=:vl",
@@ -1141,7 +1133,7 @@ class Utility
                 JOIN flag f ON (f.sessionid=s.id)
                 JOIN test_names t ON (f.test_name=t.Test_name)
                 WHERE c.Active='Y' AND s.Active='Y' AND s.Visit_label =:vl 
-                AND psc.CenterID != '1' AND c.PSCID != '%scanner%'
+                AND psc.CenterID != '1' AND c.Entity_type != 'Scanner'
                 ORDER BY t.Full_name",
                 array('vl' => $visit_label)
             );
