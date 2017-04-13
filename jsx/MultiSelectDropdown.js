@@ -7,7 +7,11 @@
 
 var SelectField = React.createClass({
   toggleCheckbox: function() {
-    this.props.toggleCheckbox(this.props.label);
+    if(this.props.multi) {
+      this.props.toggleCheckbox(this.props.label);
+    } else {
+      this.props.toggleCheckbox(this.props.temp);
+    }
   },
   render: function() {
     var checked = (this.props.checked) ? "checked" : "";
@@ -175,6 +179,7 @@ var SelectDropdown = React.createClass({
               checked={this.props.options[key]}
               toggleCheckbox={this.toggleCheckbox}
               multi={this.props.multi}
+              temp={key}
             />
           );
         }

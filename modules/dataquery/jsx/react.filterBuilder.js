@@ -76,7 +76,7 @@ var FilterRule = React.createClass({
             }, 'json');
 		}
 	},
-	fieldSelect: function(event) {
+	fieldSelect: function(field) {
 		// Update the rules desired field, setting the rules field and field type
 		var rule = JSON.parse(JSON.stringify(this.props.rule));
 		delete rule.field;
@@ -85,9 +85,9 @@ var FilterRule = React.createClass({
 		delete rule.value;
 		delete rule.visit;
 		delete rule.candidates;
-		if(event.target.value) {
-			rule.field = rule.fields[event.target.value].key[1];
-			rule.fieldType = rule.fields[event.target.value].value.Type;
+		if(field) {
+			rule.field = rule.fields[field].key[1];
+			rule.fieldType = rule.fields[field].value.Type;
 		}
 		this.props.updateRule(this.props.index, rule);
 	},
@@ -149,7 +149,7 @@ var FilterRule = React.createClass({
 		            $.get(loris.BaseURL + "/AjaxHelper.php?Module=dataquery&script=" + script,
 		                  {
 		                    category: rule.instrument,
-		                    field: rule.field,
+		                    field: rule.fields[rule.field],
 		                    value: that.state.value
 		                  },
 		                  responseHandler,
@@ -204,7 +204,12 @@ var FilterRule = React.createClass({
 			that = this;
 		if(this.props.rule.instrument) {
 			// Only display field select and etc. if instrument is selected
-			var fields = this.props.rule.fields.map(function(field, index){
+                        var fields = {};
+                        for(var i = 0; i < this.props.rule.fields.length; i++) {
+			    fields[i] = this.props.rule.fields[i].key[1];
+                        }                     
+/*			
+var fields = this.props.rule.fields.map(function(field, index){
 					if(that.props.rule.field && field.key[1] === that.props.rule.field) {
 						fieldIndex = index
 					}
@@ -212,7 +217,8 @@ var FilterRule = React.createClass({
 						<option value={index}>{field.key[1]}</option>
 					);
 				}),
-				operators = [],
+*/
+				var operators = [],
 				inputOptions, input, operatorKey, operatorSelect, options, value, inputType;
 
 			if(this.props.rule.fieldType) {
@@ -289,10 +295,14 @@ var FilterRule = React.createClass({
 						<label className="instrumentLabel">{this.props.rule.instrument}</label>
 					</div>
 					<div className="col-xs-10">
-						<select className="input-sm col-xs-3" onChange={this.fieldSelect} value={fieldIndex}>
-							<option value=""></option>
-							{fields}
-						</select>
+                                                <div className="col-xs-3">
+                                                    <SelectDropdown
+                                                        multi={false}
+                                                        onFieldClick={this.fieldSelect}
+                                                        options={fields}
+                                                        selectedCategory={this.props.rule.field}
+                                                    />
+                                                </div>
 						{operatorSelect}
 						{input}
 						{forVisits}
