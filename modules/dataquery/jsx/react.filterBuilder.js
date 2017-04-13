@@ -42,6 +42,10 @@ var LogicOperator = React.createClass({
  */
 var FilterRule = React.createClass({
 	getInitialState: function() {
+                var instruments = {};
+                for(var i = 0; i < this.props.items.length; i++) {
+                     instruments[this.props.items[i].category] = this.props.items[i].category;
+                }
 		return {
 			operators: {
 				// "enum" : {
@@ -54,17 +58,18 @@ var FilterRule = React.createClass({
 				// }
 			},
 			value: "",
+                        instruments: instruments
 		}
 	},
 	componentWillMount: function() {
        this.valueSet = loris.debounce(this.valueSet,1000);
     },
-	selectInstrument: function(event){
+	selectInstrument: function(field){
 		// Update the rules instrument, getting the instruments avalible fields
 		var rule = this.props.rule,
 			that = this;
-		if(event.target.value){
-			rule.instrument = event.target.value;
+		if(field){
+			rule.instrument = field;
 			$.get(loris.BaseURL + "/AjaxHelper.php?Module=dataquery&script=datadictionary.php", { category: rule.instrument}, function(data) {
                 rule.fields = data;
                 that.props.updateRule(that.props.index, rule);
@@ -296,7 +301,8 @@ var FilterRule = React.createClass({
 			);
 		} else {
 			// Else display dropdown for instrument select
-			var options = this.props.items.map(function(item){
+			/*
+                        var options = this.props.items.map(function(item){
 				return (
 					<option value={item.category}>{item.category}</option>
 				);
@@ -307,6 +313,17 @@ var FilterRule = React.createClass({
 					{options}
 				</select>
 			)
+                        */
+                        rule = (
+                             <div className="col-xs-10">
+                                 <SelectDropdown
+                                     multi={false}
+                                     onFieldClick={this.selectInstrument}
+                                     options={this.state.instruments}
+                                     selectedCategory=""
+                                  />
+                             </div>
+                        )
 		}
 		return (
 			<div className="panel panel-default">
@@ -439,7 +456,7 @@ var FilterGroup = React.createClass({
 		    children = this.props.group.children.map(function(child, index){
 		    	if(child.type === "rule") {
 		    		return (
-		    			<li>
+		    			<li className="treeChild">
 		    				<FilterRule rule = {child}
 		    							items = {that.props.items}
 		    							index = {index}
@@ -452,7 +469,7 @@ var FilterGroup = React.createClass({
 		    		);
 		    	} else if(child.type === "group") {
 		    		return (
-		    			<li>
+		    			<li className="treeChild">
 		    				<FilterGroup group={child}
 		    							 items={that.props.items}
 		    							 index = {index}
@@ -480,7 +497,7 @@ var FilterGroup = React.createClass({
 		return (
 			<div className="tree">
 				<ul className="firstUL">
-					<li>
+					<li className="treeChild">
 						<div className="row">
 							<div className="col-xs-2">
 								{logicOperator}
