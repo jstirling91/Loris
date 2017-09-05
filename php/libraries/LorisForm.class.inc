@@ -37,6 +37,8 @@ class LorisForm
     var $errors        = array();
     var $filters       = array();
     var $frozen        = false;
+    var $directEntry   = false;
+    var $directValues  = array();
     var $enctype       = '';
     var $groupMapping  = array();
     var $action        = '';
@@ -1180,7 +1182,7 @@ class LorisForm
      */
     function isSubmitted()
     {
-        return (!empty($_FILES) || !empty($_POST));
+        return (!empty($_FILES) || !empty($_POST) || $this->directEntry);
     }
     /**
      * Reimplements the HTML_QuickForm validate API.
@@ -1192,7 +1194,11 @@ class LorisForm
         if (!$this->isSubmitted()) {
             return false;
         }
-        $values = $this->getSubmitValues();
+        if ($this->directEntry) {
+            $values = $this->directValues;
+        } else {
+            $values = $this->getSubmitValues();
+        }
         $errors = array();
         foreach ($this->form as $elName => $el) {
             if ($el['type'] === 'group') {
@@ -1311,6 +1317,7 @@ class LorisForm
                 }
             }
         }
+
         foreach ($this->formRules as $rule) {
             if (is_callable($rule)) {
                 $violations = call_user_func($rule, $values);
@@ -1333,6 +1340,7 @@ class LorisForm
                 }
             }
         }
+
         return empty($errors);
     }
 
@@ -1657,9 +1665,9 @@ class LorisForm
     {
 
         $curPage = array(
-                    'elements' => array(),
-                    'type'     => 'page',
-                    'errors'   => $this->errors,
+                    'elements'    => array(),
+                    'type'        => 'page',
+                    'errors'      => $this->errors,
                    );
         $retVal  = $curPage;
 
