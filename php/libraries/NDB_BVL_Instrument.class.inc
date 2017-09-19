@@ -2475,6 +2475,7 @@ class NDB_BVL_Instrument extends NDB_Page
         }
         $tempPage["Elements"] = $tempForm;
         
+        $this->form->form = array();
         $tempForm = array();
         $instrumentJSON['form'][] = $tempPage;
 
