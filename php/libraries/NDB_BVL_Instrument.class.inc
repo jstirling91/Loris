@@ -1152,6 +1152,7 @@ class NDB_BVL_Instrument extends NDB_Page
                     echo "<p><b>$elname</b><br> ";
                 }
                 if (!empty($this->XINRules[$elname])) {
+                    error_log("XINRULE RUNNING    $elname");
                     $result = $this->XINRunElementRules(
                         $elname,
                         $elements,
@@ -2260,7 +2261,11 @@ class NDB_BVL_Instrument extends NDB_Page
             }
         }
 
-        return json_encode($tpl_data);
+        return $tpl_data;
+    }
+
+    function getCompletionStats() {
+        
     }
 
 
@@ -2570,23 +2575,29 @@ class NDB_BVL_Instrument extends NDB_Page
         $allErrors = array();
         $this->form->directEntry = true;
         $temp = json_decode($this->getReactReview());
+        $values = array();
 
         foreach ($temp->questions as $key => $value) {
-            $this->form->directValues[$value->SourceField] = $value->response;
+            // $this->form->directValues[$value->SourceField] = $value->response;
+            $values[$value->SourceField] = $value->response;
         }
 
         $this->_setupForm();
+        $this->form->directValues = $this->getPageValues($this->form->form, $values);
         if (!$this->form->validate()) {
             $allErrors = array_merge($allErrors, $this->form->errors);
         }
 
         $this->form->form = array();
         $this->form->errors = array();
+        $this->XINRules = array();
 
         $subtests = $this->getSubtestList();
         foreach ($subtests as $subtest) {
             $this->page = $subtest['Name'];
             $this->_setupForm();
+            $this->form->directValues = $this->getPageValues($this->form->form, $values);
+            error_log(print_r($this->form->directValues, true));
 
             if (!$this->form->validate()) {
                 $allErrors = array_merge($allErrors, $this->form->errors);
@@ -2594,6 +2605,7 @@ class NDB_BVL_Instrument extends NDB_Page
 
             $this->form->form = array();
             $this->form->errors = array();
+            $this->XINRules = array();
         }
 
         if(empty($allErrors)) {
@@ -2602,6 +2614,18 @@ class NDB_BVL_Instrument extends NDB_Page
 
         return $allErrors;
 
+    }
+
+    function getPageValues($form, $fullValues) {
+        $values = array();
+        foreach ($form as $key => $value) {
+            if ($value['type'] === 'group') {
+                $values = array_merge($values, $this->getPageValues($value['elements'], $fullValues));
+            } else if(!in_array($value['type'], array('header', 'static'))) {
+                $values[$value['name']] = $fullValues[$value['name']];
+            }
+        }
+        return $values;
     }
 
     /**
