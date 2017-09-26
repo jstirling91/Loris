@@ -1178,6 +1178,10 @@ class LorisForm
                     }
                 }
             } else {
+                if ($el['type'] === 'static' && $this->directEntry) {
+                    unset($values[$el['name']]);
+                    continue;
+                }
                 if ($el['type'] === 'file') {
                     $value = $_FILES[$el['name']]['name'];
                 } else {
