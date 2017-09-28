@@ -106,7 +106,7 @@ class DirectDataEntryMainPage
     {
 
         try {
-            $this->Instrument = \NDB_BVL_Instrument::factory(
+            $this->Instrument = \NDB_BVL_Instrument_survey::factory(
                 $this->SurveyInfo['Test_name'],
                 $this->SurveyInfo['CommentID'],
                 null,
@@ -118,7 +118,7 @@ class DirectDataEntryMainPage
 
         $this->tpl_data['InstrumentJSON'] = $this->Instrument->toDirectJSON();
 
-        $Values = \NDB_BVL_Instrument::loadInstanceData($this->Instrument);
+        $Values = \NDB_BVL_Instrument_survey::loadInstanceData($this->Instrument);
 
         unset($Values['CommentID']);
         unset($Values['UserID']);
@@ -138,7 +138,7 @@ class DirectDataEntryMainPage
     function handlePATCH() {
 
         try {
-            $this->Instrument = \NDB_BVL_Instrument::factory(
+            $this->Instrument = \NDB_BVL_Instrument_survey::factory(
                 $this->SurveyInfo['Test_name'],
                 $this->SurveyInfo['CommentID'],
                 null,
@@ -204,7 +204,7 @@ class DirectDataEntryMainPage
         }
 
         try {
-            $this->Instrument = \NDB_BVL_Instrument::factory(
+            $this->Instrument = \NDB_BVL_Instrument_survey::factory(
                 $this->SurveyInfo['Test_name'],
                 $this->SurveyInfo['CommentID'],
                 $subtest,
@@ -219,7 +219,9 @@ class DirectDataEntryMainPage
 
         if($this->Instrument->form->validate()) {
             if($data['FinalPage']) {
-                echo $this->Instrument->getReactReview();
+                echo json_encode(
+                        $this->Instrument->getReactReview()
+                     );
             } else {
                 echo $this->Instrument->toDirectJSON();
             }
@@ -247,7 +249,7 @@ class DirectDataEntryMainPage
         $data = json_decode($data, true);
 
         try {
-            $this->Instrument = \NDB_BVL_Instrument::factory(
+            $this->Instrument = \NDB_BVL_Instrument_survey::factory(
                 $this->SurveyInfo['Test_name'],
                 $this->SurveyInfo['CommentID'],
                 null,
